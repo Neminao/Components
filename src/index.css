@@ -30,7 +30,7 @@ code {
   font-size: 12px;
 }
 .popup input{
-  width: 30px;
+  width: 40px;
   position: relative;
   float: left;
 }
@@ -69,4 +69,20 @@ code {
 
 table {
   border-collapse: collapse;
+}
+
+canvas {
+  width: 200px;
+  height: 100px;
+  position: absolute;
+  top: 42px;
+  left: 2px;
+}
+#Hex {
+  width: 60px;
+  
+}
+#HexDiv {
+  position: fixed;
+  margin-top :120px;
 }
