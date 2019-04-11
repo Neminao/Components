@@ -15,8 +15,8 @@ code {
 
 .colorButton {
   background-color: white;
-  border: none;
-  width: 100px;
+  border: 1px solid black;
+  width: 200px;
   position: relative;
 }
 
@@ -33,6 +33,7 @@ code {
   width: 40px;
   position: relative;
   float: left;
+  font-size: 12px;
 }
 .popup label{
   
@@ -59,15 +60,32 @@ code {
 }
 
 .colorLabel {
-  background-color: aliceblue;
+  
   width: 100%;
   height: 20px;
   position: relative;
   padding: 0px;
   margin: 0px;
+  z-index: 2500;
 }
 
-table {
+.colorLabelBackground {
+  background-image:
+  linear-gradient(45deg, #ccc 25%, transparent 25%), 
+  linear-gradient(135deg, #ccc 25%, transparent 25%),
+  linear-gradient(45deg, transparent 75%, #ccc 75%),
+  linear-gradient(135deg, rgb(233, 233, 233) 75%, #ccc 75%);
+background-size:20px 20px; /* Must be a square */
+background-position:0 0, 10px 0, 10px -10px, 0px 10px; /* Must be half of one side of the square */
+  width: 100%;
+  height: 20px;
+  position: absolute;
+  padding: 0px;
+  margin: 0px;
+  z-index: 2400;
+}
+
+.tableData {
   border-collapse: collapse;
 }
 
@@ -84,5 +102,25 @@ canvas {
 }
 #HexDiv {
   position: fixed;
-  margin-top :120px;
+  margin-top :111px;
+  margin-left: 5px;
+}
+.BotButton {
+  width: 100%;
+  height: 25px;
+  margin: 0px;
+  border: none;
+}
+.buttonTable {
+  width: 300px;
+  margin-left: 0px;
+  margin-top: 133px;
+  border-collapse: collapse;
+  border: none;
+}
+.buttonTable tbody td tr {
+  margin: 0px;
+  padding: 0px;
+  background-color: white;
+  border: none;
 }

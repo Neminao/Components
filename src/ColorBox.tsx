@@ -1,8 +1,9 @@
-import React from 'react';
-
+import React, {Component} from 'react';
+import ColorData from './ColorData'
 interface MyState {
     currentColor: ColorData,
-    toggle: boolean
+    toggle: boolean,
+    clickedOutside: boolean
 }
 
 interface MyProps {
@@ -14,19 +15,8 @@ interface MyProps {
     }
 }
 
-interface ColorData {
-    Red: number;
-    Green: number;
-    Blue: number;
-    Sat: number;
-    Hue: number;
-    Bright: number,
-    Alpha: number;
-    Hex: string;
-    [key: string]: string | any;
-}
 
-class ColorBox extends React.Component<MyProps, MyState>{
+class ColorBox extends Component<MyProps, MyState>{
     myCan: string | ((instance: HTMLCanvasElement | null) => void) | null | undefined;
     constructor(props: MyProps) {
         super(props);
@@ -41,18 +31,19 @@ class ColorBox extends React.Component<MyProps, MyState>{
                 Hue: this.rgbToHSB(props.data.r, props.data.g, props.data.b).Hue,
                 Bright: this.rgbToHSB(props.data.r, props.data.g, props.data.b).Bright,
                 Hex: this.rgbToHex(props.data.r, props.data.g, props.data.b)
-            }
+            },
+            clickedOutside: false
         }
     }
+    myRef: any = React.createRef();
     componentDidMount() {
+        document.addEventListener("mousedown", this.handleClickOutside);
         var c: any = document.getElementById("myCanvas" + this.props.data.id);
         var c2: any = document.getElementById("myCanvas2" + this.props.data.id);
         c.width = 200;
         c.height = 100;
-
         c2.width = 200;
         c2.height = 100;
-
         var ctx: any = c.getContext("2d");
         var grad = ctx.createLinearGradient(10, 10, 195, 0);
         grad.addColorStop(0, "black");
@@ -61,15 +52,24 @@ class ColorBox extends React.Component<MyProps, MyState>{
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 200, 150);
     }
+    componentWillUnmount() {
+        document.removeEventListener("mousedown", this.handleClickOutside);
+      }
+    handleClickOutside = (e:any) => {
+        if(this.myRef.current!=null)
+        if (!this.myRef.current.contains(e.target)) {
+          this.setState({ clickedOutside: true, toggle: false });
+        }
+      };
     getProp = (): ColorData => {
         return {
             Red: this.props.data.r,
             Green: this.props.data.g,
             Blue: this.props.data.b,
             Alpha: 1,
-            Sat: 0,
-            Hue: 0,
-            Bright: 0,
+            Sat: this.rgbToHSB(this.props.data.r, this.props.data.g, this.props.data.b).Sat,
+            Hue: this.rgbToHSB(this.props.data.r, this.props.data.g, this.props.data.b).Hue,
+            Bright: this.rgbToHSB(this.props.data.r, this.props.data.g, this.props.data.b).Bright,
             Hex: this.rgbToHex(this.props.data.r, this.props.data.g, this.props.data.b)
         }
     }
@@ -80,6 +80,7 @@ class ColorBox extends React.Component<MyProps, MyState>{
             return hex.length === 1 ? '0' + hex : hex
         }).join('')
     }
+
     getCursorPosition = (e: any) => {
         const canvas: any = document.getElementById('myCanvas2' + this.props.data.id)
         const { top, left } = canvas.getBoundingClientRect();
@@ -88,6 +89,7 @@ class ColorBox extends React.Component<MyProps, MyState>{
             "top": e.clientY - top - scrollY
         }
     }
+
     hexToRgb = (hex: string) => {
         hex = hex.substring(1);
         var bigint = parseInt(hex, 16);
@@ -97,6 +99,7 @@ class ColorBox extends React.Component<MyProps, MyState>{
 
         return { Red: r, Green: g, Blue: b };
     }
+
     rgbToHSB(r: number, g: number, b: number) {
         var r1 = r / 255;
         var g1 = g / 255;
@@ -104,18 +107,15 @@ class ColorBox extends React.Component<MyProps, MyState>{
 
         var maxColor = Math.max(r1, g1, b1);
         var minColor = Math.min(r1, g1, b1);
-        //Calculate L:
         var B = (maxColor + minColor) / 2;
         var S = 0;
         var H = 0;
         if (maxColor != minColor) {
-            //Calculate S:
             if (B < 0.5) {
                 S = (maxColor - minColor) / (maxColor + minColor);
             } else {
                 S = (maxColor - minColor) / (2.0 - maxColor - minColor);
             }
-            //Calculate H:
             if (r1 == maxColor) {
                 H = (g1 - b1) / (maxColor - minColor);
             } else if (g1 == maxColor) {
@@ -126,7 +126,9 @@ class ColorBox extends React.Component<MyProps, MyState>{
         }
 
         B = B * 100;
+        B = Math.round(B * 10) / 10
         S = S * 100;
+        S = Math.round(S * 10) / 10
         H = H * 60;
         if (H < 0) {
             H += 360;
@@ -143,7 +145,7 @@ class ColorBox extends React.Component<MyProps, MyState>{
         var s = Sat * (1 / 100);
         var l = Bright * (1 / 100);
         if (s == 0) {
-            r = g = b = l; // achromatic
+            r = g = b = l;
         } else {
             var hue2rgb = function hue2rgb(p: number, q: number, t: number) {
                 if (t < 0) t += 1;
@@ -160,14 +162,14 @@ class ColorBox extends React.Component<MyProps, MyState>{
             g = hue2rgb(p, q, h);
             b = hue2rgb(p, q, h - 1 / 3);
         }
-
         return { Red: Math.round(r * 255), Green: Math.round(g * 255), Blue: Math.round(b * 255) };
     }
-    handleClick = (event: any) => {
+
+    handleClick = () => {
         console.log("Clicked")
         this.setState(prev => {
             return {
-                toggle: !prev.toggle
+                toggle: !prev.toggle,
             }
         })
     }
@@ -196,7 +198,6 @@ class ColorBox extends React.Component<MyProps, MyState>{
             temp.Bright = this.rgbToHSB(temp.Red, temp.Green, temp.Blue).Bright;
         }
         else {
-            temp[key] = +value;
             if (key == "Red" || key == "Green" || key == "Blue") {
                 temp.Hue = this.rgbToHSB(temp.Red, temp.Green, temp.Blue).Hue;
                 temp.Sat = this.rgbToHSB(temp.Red, temp.Green, temp.Blue).Sat;
@@ -234,6 +235,7 @@ class ColorBox extends React.Component<MyProps, MyState>{
         })
         this.drawCanvasPointer(ctx, pos);
     }
+
     drawCanvasPointer = (ctx: any, pos: any) => {
         ctx.clearRect(0, 0, 1800, 1000);
         ctx.beginPath();
@@ -242,8 +244,23 @@ class ColorBox extends React.Component<MyProps, MyState>{
         ctx.arc(pos.left, pos.top, 3, 0, 2 * Math.PI);
         ctx.stroke();
     }
+
     getRGB = (data: ColorData): string => {
-        return 'rgb(' + data.Red + ',' + data.Green + ',' + data.Blue + ')'
+        return 'rgba(' + data.Red + ',' + data.Green + ',' + data.Blue + ',' + data.Alpha + ')'
+    }
+    handleAccept = () => {
+        this.props.data.r = this.state.currentColor.Red;
+        this.props.data.g = this.state.currentColor.Green;
+        this.props.data.b = this.state.currentColor.Blue;
+        this.setState({
+            toggle: false
+        })
+    }
+    handleCancel = () => {
+        this.setState({
+            currentColor: this.getProp(),
+            toggle: false
+        })
     }
     render = () => {
         const display = (this.state.toggle) ? 'block' : 'none';
@@ -251,10 +268,11 @@ class ColorBox extends React.Component<MyProps, MyState>{
             <div className='wrap'>
                 <div>
 
-                    <button className={'colorButton'} onClick={this.handleClick}>Click!</button>
-                    <div id='box' className='popup' style={{ display: display }}>
+                    <button className={'colorButton'} style={{backgroundColor: this.getRGB(this.getProp())}} onClick={this.handleClick}>{this.getRGB(this.getProp())}</button>
+                    <div ref={this.myRef} id='box' className='popup' style={{ display: display }}>
 
-                        <div className='colorPickerBox'></div>
+
+                        <div className='colorLabelBackground'></div>
                         <div id='first' className='colorLabel' style={{
                             backgroundColor: this.getRGB(this.state.currentColor)
                         }}>
@@ -262,6 +280,7 @@ class ColorBox extends React.Component<MyProps, MyState>{
                                 backgroundColor: this.getRGB(this.state.currentColor)
                             }}>{this.getRGB(this.state.currentColor)}</label>
                         </div>
+                        <div className='colorLabelBackground'></div>
                         <div id='second' className='colorLabel' >
                             <label id='second' onClick={this.handleDivClick} className='colorLabel' style={{
                                 backgroundColor: this.getRGB(this.getProp())
@@ -272,22 +291,42 @@ class ColorBox extends React.Component<MyProps, MyState>{
                         <canvas id={'myCanvas' + this.props.data.id} onMouseDown={this.handleCanvasClick}></canvas>
 
                         <div style={{ float: "right" }}>
-                            <table>
+                            <table className = 'tableData'>
                                 <tbody>
-                                    <InputBox onChange={this.handleChange} name={'Red'} value={this.state.currentColor.Red} min={0} max={255} />
-                                    <InputBox onChange={this.handleChange} name={'Green'} value={this.state.currentColor.Green} min={0} max={255} />
-                                    <InputBox onChange={this.handleChange} name={'Blue'} value={this.state.currentColor.Blue} min={0} max={255} />
-                                    <InputBox onChange={this.handleChange} name={'Hue'} value={this.state.currentColor.Hue} min={0} max={359} />
-                                    <InputBox onChange={this.handleChange} name={'Sat'} value={this.state.currentColor.Sat} min={0} max={100} />
-                                    <InputBox onChange={this.handleChange} name={'Bright'} value={this.state.currentColor.Bright} min={0} max={100} />
+                                    <InputBox onChange={this.handleChange} name={'Red'}
+                                        value={this.state.currentColor.Red} min={0} max={255} />
+                                    <InputBox onChange={this.handleChange} name={'Green'}
+                                        value={this.state.currentColor.Green} min={0} max={255} />
+                                    <InputBox onChange={this.handleChange} name={'Blue'}
+                                        value={this.state.currentColor.Blue} min={0} max={255} />
+                                    <InputBox onChange={this.handleChange} name={'Hue'}
+                                        value={this.state.currentColor.Hue} min={0} max={360} />
+                                    <InputBox onChange={this.handleChange} name={'Sat'}
+                                        value={this.state.currentColor.Sat} min={0} max={100} step={0.1}/>
+                                    <InputBox onChange={this.handleChange} name={'Bright'}
+                                        value={this.state.currentColor.Bright} min={0} max={100} step={0.1}/>
                                 </tbody>
                             </table>
                         </div>
                         <div id="HexDiv">
                             <label>Hex:</label>
-
-                            <input id="Hex" onChange={this.handleChange} type="text" placeholder={this.state.currentColor.Hex} value={this.state.currentColor.Hex}></input>
+                            <input id="Hex" onChange={this.handleChange} type="text"
+                                placeholder={this.state.currentColor.Hex} value={this.state.currentColor.Hex}></input>
+                            <label>Alpha:</label>
+                            <input id="Alpha" onChange={this.handleChange} type="number"
+                                placeholder={this.state.currentColor.Alpha + ""} value={this.state.currentColor.Alpha}
+                                min={0} max={1} step={0.1}></input>
                         </div>
+                        
+                            <table className="buttonTable">
+                                <tbody>
+                                    <tr>
+                                        <td><button onClick={this.handleAccept} className='BotButton'>Accept</button></td>
+                                        <td><button onClick={this.handleCancel} className='BotButton'>Cancel</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
                     </div>
                 </div>
             </div>
@@ -302,7 +341,9 @@ function InputBox(props: any) {
             <label>{props.name}</label>
         </td>
             <td>
-                <input onChange={props.onChange} id={props.name} type="number" placeholder={props.value} value={props.value} min={props.min} max={props.max}></input>
+                <input onChange={props.onChange} id={props.name} 
+                type="number" placeholder={props.value} value={props.value} 
+                min={props.min} max={props.max} step={props.step}></input>
             </td></tr>
     )
 }
