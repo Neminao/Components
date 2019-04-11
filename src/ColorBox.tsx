@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import ColorData from './ColorData'
 interface MyState {
     currentColor: ColorData,
@@ -36,8 +36,7 @@ class ColorBox extends Component<MyProps, MyState>{
         }
     }
     myRef: any = React.createRef();
-    componentDidMount() {
-        document.addEventListener("mousedown", this.handleClickOutside);
+    componentDidUpdate() {    
         var c: any = document.getElementById("myCanvas" + this.props.data.id);
         var c2: any = document.getElementById("myCanvas2" + this.props.data.id);
         c.width = 200;
@@ -52,15 +51,18 @@ class ColorBox extends Component<MyProps, MyState>{
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 200, 150);
     }
+    componentDidMount() {
+        document.addEventListener("mousedown", this.handleClickOutside);
+    }
     componentWillUnmount() {
         document.removeEventListener("mousedown", this.handleClickOutside);
-      }
-    handleClickOutside = (e:any) => {
-        if(this.myRef.current!=null)
-        if (!this.myRef.current.contains(e.target)) {
-          this.setState({ clickedOutside: true, toggle: false });
-        }
-      };
+    }
+    handleClickOutside = (e: any) => {
+        if (this.myRef.current != null)
+            if (!this.myRef.current.contains(e.target)) {
+                this.setState({ clickedOutside: true, toggle: false });
+            }
+    };
     getProp = (): ColorData => {
         return {
             Red: this.props.data.r,
@@ -263,12 +265,12 @@ class ColorBox extends Component<MyProps, MyState>{
         })
     }
     render = () => {
-        const display = (this.state.toggle) ? 'block' : 'none';
+        const display = (this.state.toggle) ? 'inline-block' : 'none';
         return (
             <div className='wrap'>
                 <div>
 
-                    <button className={'colorButton'} style={{backgroundColor: this.getRGB(this.getProp())}} onClick={this.handleClick}>{this.getRGB(this.getProp())}</button>
+                    <button className={'colorButton'} style={{ backgroundColor: this.getRGB(this.getProp()) }} onClick={this.handleClick}>{this.getRGB(this.getProp())}</button>
                     <div ref={this.myRef} id='box' className='popup' style={{ display: display }}>
 
 
@@ -291,7 +293,7 @@ class ColorBox extends Component<MyProps, MyState>{
                         <canvas id={'myCanvas' + this.props.data.id} onMouseDown={this.handleCanvasClick}></canvas>
 
                         <div style={{ float: "right" }}>
-                            <table className = 'tableData'>
+                            <table className='tableData'>
                                 <tbody>
                                     <InputBox onChange={this.handleChange} name={'Red'}
                                         value={this.state.currentColor.Red} min={0} max={255} />
@@ -302,9 +304,9 @@ class ColorBox extends Component<MyProps, MyState>{
                                     <InputBox onChange={this.handleChange} name={'Hue'}
                                         value={this.state.currentColor.Hue} min={0} max={360} />
                                     <InputBox onChange={this.handleChange} name={'Sat'}
-                                        value={this.state.currentColor.Sat} min={0} max={100} step={0.1}/>
+                                        value={this.state.currentColor.Sat} min={0} max={100} step={0.1} />
                                     <InputBox onChange={this.handleChange} name={'Bright'}
-                                        value={this.state.currentColor.Bright} min={0} max={100} step={0.1}/>
+                                        value={this.state.currentColor.Bright} min={0} max={100} step={0.1} />
                                 </tbody>
                             </table>
                         </div>
@@ -317,16 +319,16 @@ class ColorBox extends Component<MyProps, MyState>{
                                 placeholder={this.state.currentColor.Alpha + ""} value={this.state.currentColor.Alpha}
                                 min={0} max={1} step={0.1}></input>
                         </div>
-                        
-                            <table className="buttonTable">
-                                <tbody>
-                                    <tr>
-                                        <td><button onClick={this.handleAccept} className='BotButton'>Accept</button></td>
-                                        <td><button onClick={this.handleCancel} className='BotButton'>Cancel</button></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            
+
+                        <table className="buttonTable">
+                            <tbody>
+                                <tr>
+                                    <td><button onClick={this.handleAccept} className='BotButton'>Accept</button></td>
+                                    <td><button onClick={this.handleCancel} className='BotButton'>Cancel</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
                     </div>
                 </div>
             </div>
@@ -341,9 +343,9 @@ function InputBox(props: any) {
             <label>{props.name}</label>
         </td>
             <td>
-                <input onChange={props.onChange} id={props.name} 
-                type="number" placeholder={props.value} value={props.value} 
-                min={props.min} max={props.max} step={props.step}></input>
+                <input onChange={props.onChange} id={props.name}
+                    type="number" placeholder={props.value} value={props.value}
+                    min={props.min} max={props.max} step={props.step}></input>
             </td></tr>
     )
 }
