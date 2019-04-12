@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import ColorData from './ColorData'
 interface MyState {
-    currentColor: ColorData,
-    toggle: boolean,
-    clickedOutside: boolean
+    currentColor: ColorData;
+    toggle: boolean;
+    clickedOutside: boolean;
+    prevColorsArr: ColorData[];
 }
 
 interface MyProps {
@@ -32,11 +33,12 @@ class ColorBox extends Component<MyProps, MyState>{
                 Bright: this.rgbToHSB(props.data.r, props.data.g, props.data.b).Bright,
                 Hex: this.rgbToHex(props.data.r, props.data.g, props.data.b)
             },
-            clickedOutside: false
+            clickedOutside: false,
+            prevColorsArr: []
         }
     }
     myRef: any = React.createRef();
-    componentDidUpdate() {    
+    componentDidUpdate() {
         var c: any = document.getElementById("myCanvas" + this.props.data.id);
         var c2: any = document.getElementById("myCanvas2" + this.props.data.id);
         c.width = 200;
@@ -251,11 +253,16 @@ class ColorBox extends Component<MyProps, MyState>{
         return 'rgba(' + data.Red + ',' + data.Green + ',' + data.Blue + ',' + data.Alpha + ')'
     }
     handleAccept = () => {
-        this.props.data.r = this.state.currentColor.Red;
-        this.props.data.g = this.state.currentColor.Green;
-        this.props.data.b = this.state.currentColor.Blue;
+        const data = {...this.state.currentColor};
+        this.props.data.r = data.Red;
+        this.props.data.g = data.Green;
+        this.props.data.b = data.Blue;
+        let arr = this.state.prevColorsArr
+        if(arr.length>=7)arr.shift();
+        arr.push(data);
         this.setState({
-            toggle: false
+            toggle: false,
+            prevColorsArr: arr
         })
     }
     handleCancel = () => {
@@ -264,8 +271,37 @@ class ColorBox extends Component<MyProps, MyState>{
             toggle: false
         })
     }
+    handleSlider = (event: any) => {
+        let data = this.state.currentColor;
+        data.Hue = event.target.value;
+        data.Sat = 100;
+        data.Bright = 50;
+        data.Red = this.hslToRgb(data.Hue, data.Sat, data.Bright).Red;
+        data.Green = this.hslToRgb(data.Hue, data.Sat, data.Bright).Green;
+        data.Blue = this.hslToRgb(data.Hue, data.Sat, data.Bright).Blue;
+        data.Hex = this.rgbToHex(data.Red, data.Green, data.Blue);
+        this.setState({
+            currentColor: data
+        })
+    }
+    handlePrevColor = (color: ColorData) => {
+        this.setState({
+            currentColor: color
+        })
+    }
     render = () => {
         const display = (this.state.toggle) ? 'inline-block' : 'none';
+        const btn = <td><button className='PrevColorButton'></button></td>
+        let btns: any = [];
+        for(let i = 0;i<7;i++){
+            btns.push(btn);
+        }
+        this.state.prevColorsArr.forEach(color => {
+            btns.shift();
+            btns.push(
+                <td><button onClick={() => this.handlePrevColor(color)} style={{backgroundColor: color.Hex}} className='PrevColorButton'></button></td>
+            )
+        })
         return (
             <div className='wrap'>
                 <div>
@@ -319,19 +355,26 @@ class ColorBox extends Component<MyProps, MyState>{
                                 placeholder={this.state.currentColor.Alpha + ""} value={this.state.currentColor.Alpha}
                                 min={0} max={1} step={0.1}></input>
                         </div>
-
-                        <table className="buttonTable">
+                        <input onChange={this.handleSlider} type="range" min="0" max="360"></input>
+                        <table className='PrevColorTable'>
                             <tbody>
-                                <tr>
-                                    <td><button onClick={this.handleAccept} className='BotButton'>Accept</button></td>
-                                    <td><button onClick={this.handleCancel} className='BotButton'>Cancel</button></td>
-                                </tr>
-                            </tbody>
+                            <tr>
+                                {btns.reverse()}
+                            </tr>
+                        </tbody>
                         </table>
+                    <table className="buttonTable">
+                        <tbody>
+                            <tr>
+                                <td><button onClick={this.handleAccept} className='BotButton'>Accept</button></td>
+                                <td><button onClick={this.handleCancel} className='BotButton'>Cancel</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                    </div>
                 </div>
             </div>
+            </div >
         )
     }
 
