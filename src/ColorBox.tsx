@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import ColorData from './ColorData'
+
 interface MyState {
     currentColor: ColorData;
     toggle: boolean;
@@ -7,18 +7,33 @@ interface MyState {
     prevColorsArr: ColorData[];
 }
 
+interface ColorData {
+    Red: number;
+    Green: number;
+    Blue: number;
+    Sat: number;
+    Hue: number;
+    Bright: number,
+    Alpha: number;
+    Hex: string;
+    [key: string]: string | any;
+}
+
 interface MyProps {
     data: {
         r: number,
         g: number,
         b: number,
-        id: number
-    }
+        id: number,
+        display: string
+    };
+    prevColors: any;
 }
 
 
 class ColorBox extends Component<MyProps, MyState>{
-    myCan: string | ((instance: HTMLCanvasElement | null) => void) | null | undefined;
+    myCan = React.createRef<HTMLCanvasElement>();
+    myCan2 = React.createRef<HTMLCanvasElement>();
     constructor(props: MyProps) {
         super(props);
         this.state = {
@@ -34,27 +49,28 @@ class ColorBox extends Component<MyProps, MyState>{
                 Hex: this.rgbToHex(props.data.r, props.data.g, props.data.b)
             },
             clickedOutside: false,
-            prevColorsArr: []
+            prevColorsArr: this.props.prevColors
         }
     }
     myRef: any = React.createRef();
     componentDidUpdate() {
-        var c: any = document.getElementById("myCanvas" + this.props.data.id);
-        var c2: any = document.getElementById("myCanvas2" + this.props.data.id);
+
+    }
+    componentDidMount() {
+        document.addEventListener("mousedown", this.handleClickOutside);
+        let c: any = this.myCan.current;
+        let c2: any = this.myCan2.current;
         c.width = 200;
         c.height = 100;
         c2.width = 200;
         c2.height = 100;
-        var ctx: any = c.getContext("2d");
-        var grad = ctx.createLinearGradient(10, 10, 195, 0);
+        const ctx: any = c.getContext("2d");
+        let grad = ctx.createLinearGradient(10, 10, 195, 0);
         grad.addColorStop(0, "black");
-        grad.addColorStop(0.5, this.getRGB(this.getProp()));
+        grad.addColorStop(0.5, this.state.currentColor.Hex);
         grad.addColorStop(1, "white");
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 200, 150);
-    }
-    componentDidMount() {
-        document.addEventListener("mousedown", this.handleClickOutside);
     }
     componentWillUnmount() {
         document.removeEventListener("mousedown", this.handleClickOutside);
@@ -86,7 +102,7 @@ class ColorBox extends Component<MyProps, MyState>{
     }
 
     getCursorPosition = (e: any) => {
-        const canvas: any = document.getElementById('myCanvas2' + this.props.data.id)
+        const canvas: any = this.myCan2.current;
         const { top, left } = canvas.getBoundingClientRect();
         return {
             "left": e.clientX - left - scrollX,
@@ -95,25 +111,35 @@ class ColorBox extends Component<MyProps, MyState>{
     }
 
     hexToRgb = (hex: string) => {
-        hex = hex.substring(1);
-        var bigint = parseInt(hex, 16);
-        var r = (bigint >> 16) & 255;
-        var g = (bigint >> 8) & 255;
-        var b = bigint & 255;
-
+        let r = 255;
+        let b = 255;
+        let g = 255;
+        if (hex.length == 4 || hex.length == 7) {
+            if (hex.length == 4) {
+                let r1 = hex[1];
+                let g1 = hex[2];
+                let b1 = hex[3];
+                hex = '#' + r1 + r1 + g1 + g1 + b1 + b1
+            }
+            hex = hex.substring(1);
+            let bigint = parseInt(hex, 16);
+            r = (bigint >> 16) & 255;
+            g = (bigint >> 8) & 255;
+            b = bigint & 255;
+        }
         return { Red: r, Green: g, Blue: b };
     }
 
     rgbToHSB(r: number, g: number, b: number) {
-        var r1 = r / 255;
-        var g1 = g / 255;
-        var b1 = b / 255;
+        let r1 = r / 255;
+        let g1 = g / 255;
+        let b1 = b / 255;
 
-        var maxColor = Math.max(r1, g1, b1);
-        var minColor = Math.min(r1, g1, b1);
-        var B = (maxColor + minColor) / 2;
-        var S = 0;
-        var H = 0;
+        let maxColor = Math.max(r1, g1, b1);
+        let minColor = Math.min(r1, g1, b1);
+        let B = (maxColor + minColor) / 2;
+        let S = 0;
+        let H = 0;
         if (maxColor != minColor) {
             if (B < 0.5) {
                 S = (maxColor - minColor) / (maxColor + minColor);
@@ -144,14 +170,14 @@ class ColorBox extends Component<MyProps, MyState>{
         };
     }
     hslToRgb(Hue: number, Sat: number, Bright: number) {
-        var r, g, b;
-        var h = Hue * (1 / 360);
-        var s = Sat * (1 / 100);
-        var l = Bright * (1 / 100);
+        let r, g, b;
+        let h = Hue * (1 / 360);
+        let s = Sat * (1 / 100);
+        let l = Bright * (1 / 100);
         if (s == 0) {
             r = g = b = l;
         } else {
-            var hue2rgb = function hue2rgb(p: number, q: number, t: number) {
+            let hue2rgb = function hue2rgb(p: number, q: number, t: number) {
                 if (t < 0) t += 1;
                 if (t > 1) t -= 1;
                 if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -160,8 +186,8 @@ class ColorBox extends Component<MyProps, MyState>{
                 return p;
             }
 
-            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            var p = 2 * l - q;
+            let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            let p = 2 * l - q;
             r = hue2rgb(p, q, h + 1 / 3);
             g = hue2rgb(p, q, h);
             b = hue2rgb(p, q, h - 1 / 3);
@@ -173,7 +199,7 @@ class ColorBox extends Component<MyProps, MyState>{
         console.log("Clicked")
         this.setState(prev => {
             return {
-                toggle: !prev.toggle,
+                toggle: true,
             }
         })
     }
@@ -184,6 +210,17 @@ class ColorBox extends Component<MyProps, MyState>{
             this.setState({
                 currentColor: this.getProp()
             })
+        }
+        let isHexCorrect = /^#[0-9A-F]{3}([0-9A-F]{3})?$/i.test(this.getProp().Hex);
+        if (isHexCorrect) {
+            let c: any = this.myCan.current;
+            let ctx: any = c.getContext("2d");
+            let grad = ctx.createLinearGradient(10, 10, 195, 0);
+            grad.addColorStop(0, "black");
+            grad.addColorStop(0.5, this.getProp().Hex);
+            grad.addColorStop(1, "white");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 200, 150);
         }
     }
     handleChange = (event: any) => {
@@ -217,14 +254,25 @@ class ColorBox extends Component<MyProps, MyState>{
         this.setState({
             currentColor: temp
         })
+        let isHexCorrect = /^#[0-9A-F]{3}([0-9A-F]{3})?$/i.test(temp.Hex);
+        if (isHexCorrect) {
+            let c: any = this.myCan.current;
+            let ctx: any = c.getContext("2d");
+            let grad = ctx.createLinearGradient(10, 10, 195, 0);
+            grad.addColorStop(0, "black");
+            grad.addColorStop(0.5, temp.Hex);
+            grad.addColorStop(1, "white");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 200, 150);
+        }
     }
     handleCanvasClick = (e: any) => {
-        var c: any = document.getElementById("myCanvas2" + this.props.data.id);
-        var ctx: any = c.getContext("2d");
-        var cb: any = document.getElementById("myCanvas" + this.props.data.id);
-        var ctxb: any = cb.getContext("2d");
-        var pos = this.getCursorPosition(e);
-        var p = ctxb.getImageData(pos.left, pos.top, 1, 1).data;
+        let c: any = this.myCan2.current;
+        let ctx: any = c.getContext("2d");
+        let cb: any = this.myCan.current;
+        let ctxb: any = cb.getContext("2d");
+        let pos = this.getCursorPosition(e);
+        let p = ctxb.getImageData(pos.left, pos.top, 1, 1).data;
         console.log(p)
         let temp = this.state.currentColor;
         temp.Red = p[0];
@@ -253,17 +301,25 @@ class ColorBox extends Component<MyProps, MyState>{
         return 'rgba(' + data.Red + ',' + data.Green + ',' + data.Blue + ',' + data.Alpha + ')'
     }
     handleAccept = () => {
-        const data = {...this.state.currentColor};
+        const data = { ...this.state.currentColor };
         this.props.data.r = data.Red;
         this.props.data.g = data.Green;
         this.props.data.b = data.Blue;
+        let pom = false;
         let arr = this.state.prevColorsArr
-        if(arr.length>=7)arr.shift();
-        arr.push(data);
+        if (arr.length >= 10) arr.shift();
+        this.props.prevColors.forEach((color: ColorData) => {
+            if (color.Red == data.Red && color.Green == data.Green && color.Blue == data.Blue) {
+                pom = true;
+            }
+        })
+        if (!pom)
+            arr.push(data);
         this.setState({
             toggle: false,
             prevColorsArr: arr
         })
+
     }
     handleCancel = () => {
         this.setState({
@@ -283,24 +339,43 @@ class ColorBox extends Component<MyProps, MyState>{
         this.setState({
             currentColor: data
         })
+        let c: any = this.myCan.current;
+        let ctx: any = c.getContext("2d");
+        let grad = ctx.createLinearGradient(10, 10, 195, 0);
+        grad.addColorStop(0, "black");
+        grad.addColorStop(0.5, data.Hex);
+        grad.addColorStop(1, "white");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 200, 150);
     }
     handlePrevColor = (color: ColorData) => {
-        const data = {...color};
+        const data = { ...color };
         this.setState({
             currentColor: data
         })
+        let isHexCorrect = /^#[0-9A-F]{3}([0-9A-F]{3})?$/i.test(data.Hex);
+        if (isHexCorrect) {
+            let c: any = this.myCan.current;
+            let ctx: any = c.getContext("2d");
+            let grad = ctx.createLinearGradient(10, 10, 195, 0);
+            grad.addColorStop(0, "black");
+            grad.addColorStop(0.5, data.Hex);
+            grad.addColorStop(1, "white");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 200, 150);
+        }
     }
     render = () => {
-        const display = (this.state.toggle) ? 'inline-block' : 'none';
+        const display = (this.state.toggle) ? this.props.data.display : 'none';
         const btn = <td><button className='PrevColorButton'></button></td>
         let btns: any = [];
-        for(let i = 0;i<7;i++){
+        for (let i = 0; i < 10; i++) {
             btns.push(btn);
         }
         this.state.prevColorsArr.forEach(color => {
             btns.shift();
             btns.push(
-                <td><button onClick={() => this.handlePrevColor(color)} style={{backgroundColor: color.Hex}} className='PrevColorButton'></button></td>
+                <td><button onClick={() => this.handlePrevColor(color)} style={{ backgroundColor: color.Hex }} className='PrevColorButton'></button></td>
             )
         })
         return (
@@ -326,8 +401,8 @@ class ColorBox extends Component<MyProps, MyState>{
                             }}>
                                 {this.getRGB(this.getProp())}</label>
                         </div>
-                        <canvas id={'myCanvas2' + this.props.data.id} onMouseDown={this.handleCanvasClick} style={{ position: 'absolute', zIndex: 2000 }}></canvas>
-                        <canvas id={'myCanvas' + this.props.data.id} onMouseDown={this.handleCanvasClick}></canvas>
+                        <canvas ref={this.myCan2} id={'myCanvas2' + this.props.data.id} onMouseDown={this.handleCanvasClick} style={{ position: 'absolute', zIndex: 2000 }}></canvas>
+                        <canvas ref={this.myCan} id={'myCanvas' + this.props.data.id} onMouseDown={this.handleCanvasClick}></canvas>
 
                         <div style={{ float: "right" }}>
                             <table className='tableData'>
@@ -359,22 +434,22 @@ class ColorBox extends Component<MyProps, MyState>{
                         <input onChange={this.handleSlider} type="range" min="0" max="360"></input>
                         <table className='PrevColorTable'>
                             <tbody>
-                            <tr>
-                                {btns.reverse()}
-                            </tr>
-                        </tbody>
+                                <tr>
+                                    {btns.reverse()}
+                                </tr>
+                            </tbody>
                         </table>
-                    <table className="buttonTable">
-                        <tbody>
-                            <tr>
-                                <td><button onClick={this.handleAccept} className='BotButton'>Accept</button></td>
-                                <td><button onClick={this.handleCancel} className='BotButton'>Cancel</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                        <table className="buttonTable">
+                            <tbody>
+                                <tr>
+                                    <td><button onClick={this.handleAccept} className='BotButton'>Accept</button></td>
+                                    <td><button onClick={this.handleCancel} className='BotButton'>Cancel</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
 
+                    </div>
                 </div>
-            </div>
             </div >
         )
     }
