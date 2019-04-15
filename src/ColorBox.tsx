@@ -24,6 +24,7 @@ interface MyProps {
         r: number,
         g: number,
         b: number,
+        a: number,
         id: number,
         display: string
     };
@@ -305,6 +306,7 @@ class ColorBox extends Component<MyProps, MyState>{
         this.props.data.r = data.Red;
         this.props.data.g = data.Green;
         this.props.data.b = data.Blue;
+        this.props.data.a = data.Alpha;
         let pom = false;
         let arr = this.state.prevColorsArr
         if (arr.length >= 10) arr.shift();
