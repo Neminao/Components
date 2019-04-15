@@ -309,7 +309,7 @@ class ColorBox extends Component<MyProps, MyState>{
         this.props.data.a = data.Alpha;
         let pom = false;
         let arr = this.state.prevColorsArr
-        if (arr.length >= 10) arr.shift();
+        if (arr.length > 10) arr.shift();
         this.props.prevColors.forEach((color: ColorData) => {
             if (color.Red == data.Red && color.Green == data.Green && color.Blue == data.Blue) {
                 pom = true;
