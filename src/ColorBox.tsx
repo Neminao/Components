@@ -285,8 +285,9 @@ class ColorBox extends Component<MyProps, MyState>{
         })
     }
     handlePrevColor = (color: ColorData) => {
+        const data = {...color};
         this.setState({
-            currentColor: color
+            currentColor: data
         })
     }
     render = () => {
